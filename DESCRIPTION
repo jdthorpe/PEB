@@ -1,0 +1,16 @@
+Package: PEB
+Title: What the package does (one line)
+Version: 0.1
+Authors@R: "First Last <first.last@example.com> [aut, cre]"
+Description: What the package does (one paragraph)
+Imports: multilevel, CompQuadForm
+Depends: 
+    R (>= 2.14.0)
+License: What license is it under?
+LazyData: true
+Collate: 
+    'PEB-parameters.r'
+    'peb-functions.r'
+    'peb-utils.r'
+Suggests: knitr
+VignetteBuilder: knitr
