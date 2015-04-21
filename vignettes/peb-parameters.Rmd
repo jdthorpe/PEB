@@ -1,7 +1,7 @@
 ---
-title: "A Practial Guide to the PEB"
+title: "A Practical Guide to the PEB"
 author: "Jason Thorpe [ jdthorpe_at_gmail.com ]"
-date: "2014-12-25"
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{PEB Parameters, An Introduction}
@@ -14,14 +14,14 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 # Parameters for the Parametric Empirical Bayes Algorithm 
 
-When using the Paremetric Empritical Bayes (PEB) algorithm to set personalized
+When using the Parametric Empirical Bayes (PEB) algorithm to set personalized
 thresholds for a biomarker, it is necessary estimate the population average
 (`mu`) for the biomarker as well as the within- and between-person variation of
 that marker (sigma squared [`s2`] and tau squared[`t2`], respectively).  A
-dataset with observed marker levels from a population of healthy individuls (the
-'prior population' here on), at least some of whome have marker levels taken from
+dataset with observed marker levels from a population of healthy individuals (the
+'prior population' here on), at least some of whom have marker levels taken from
 multiple time points ('prior observations') is required to estimate each of
-these paremters.
+these parameters.
 
 ## Parameter estimates with equal k's 
 
@@ -29,11 +29,11 @@ In the case that each member of the prior population contributes equal numbers
 of prior observations, the mean of all prior observations is a minimum variance
 unbiased (MVU) estimate of the population mean and the mean of the within person
 variance estimates is an MVU estimate of `s2`, and the `var(m_i) - (s2/k)` is
-an MVU estimate of the the `s2`.  Note that excess variation attributable to the
-process of extimateing the within person means (`m_i`) is subtraced from the
+an MVU estimate of the `s2`.  Note that excess variation attributable to the
+process of estimating the within person means (`m_i`) is subtracted from the
 sample variance (`var(m_i)`).
 
-To illustrate the processe of estimating these paraemters, a random prior population 
+To illustrate the process of estimating these parameters, a random prior population 
 can be generated as follows:
 
 ```{r}
@@ -62,10 +62,9 @@ mu = mean(x)
 s2 = mean(tapply(x,id,var))
 t2 = var(tapply(x,id,mean))- (s2/k)
 c(mu,s2,t2)
-
 ```
 
-The function `PEBparams()` calculates *intital* estimates for `mu`, `s2`, and `t2`
+The function `PEBparams()` calculates *initital* estimates for `mu`, `s2`, and `t2`
 in exactly this way when the `'iterative'` is specified.
 
 ```{r}
@@ -73,12 +72,11 @@ library('PEB')
 params <- PEBparams(x,id,method='iterative',iterations=1)
 params
 
-# The individual parmeters can be extracted via:
+# The individual parameters can be extracted via:
 c(params$mu,params$s2,params$t2)
-
 ```
 
-Note that in addition to each of the required paremters ,
+Note that in addition to each of the required parameters ,
 `PEBparams(...,method='iterative')` also estimates the error variances for each
 parameter which are used calculate confidence intervals. The error variances can
 be viewed via:
@@ -87,9 +85,9 @@ be viewed via:
 params[c('mu.ev','t2.ev','s2.ev')]
 ```
 
-## Parameter estimates with un-equal k's 
+## Parameter estimates with unequal k's 
 
-In practice, the pior population will typically be a convience populatoin, which
+In practice, the prior population will typically be a convenience population, which
 is unlikely to be structured with equal numbers of observations from every individual.
 
 A convenience population can be simulated as follows:
@@ -118,9 +116,7 @@ beta <- .6
 
 # random marker levels with ICC = beta
 x <- sqrt(beta)*x1 + sqrt(1-beta)*x2
-
 ```
-
 **Note that** in this example, `d` begins with 2 in order to example to keep the
 example as simple as possible.  In principal including individuals with just one
 prior observation is possible, and doing so improves estimates of `mu` and
@@ -128,56 +124,53 @@ prior observation is possible, and doing so improves estimates of `mu` and
 
 With unequal numbers of observations per person, an MVU estimate of `s2` can be
 still obtained by as a weighted average of the within person variances, where
-the weights are determined by the number of obsersvations from that individual,
+the weights are determined by the number of observations from that individual,
 as follows:
 
 ```{r}
 # s2 estimates for the each individual
 s2_i 	<- tapply(x,id,var)
 
-# otpimal weights
+# optimal weights
 w	<- (k - 1) / 2
 
 # an MVU estimate of s2
 (s2 <- sum(w*s2_i) / sum(w))
-
 ```
 
-The above estiamate of `s2` is indeed the estimate for `s2` returned by
+The above estimate of `s2` is indeed the estimate for `s2` returned by
 `PEBparams(...,method='iterative')`.
 
 ```{r}
 params <- PEBparams(x,id,method='iterative')
 params$s2
-
 ```
 
-Unfortunatly, closed form MVU estimates of `mu` and `s2` are not available.
-The `mu` parameter is most accuratly thought of as the average of the personal
-averages. With unequal numbers of prior observations, an MVU estimat of `mu`
+Unfortunately, closed form MVU estimates of `mu` and `s2` are not available.
+The `mu` parameter is most accurately thought of as the average of the personal
+averages. With unequal numbers of prior observations, an MVU estimate of `mu`
 will be a weighted average of the set of personal means {`mu_i`} calculated as
 follows:
 
 ```{r}
 mu_i <- tapply(x,id,mean)
-
 ```
 
 The relative weights applied to each element of `mu_i` would depend on the
-numbers of prior observations per person as well as relative magnituds of `t2` and `s2`.
+numbers of prior observations per person as well as relative magnitudes of `t2` and `s2`.
 Hence an MVU estimate of `mu` would rely on an MVU estimate of `t2`.  On the
 other hand, the estimate of `t2` depends on an estimate of `mu` around which the
 sum of the squares is calculated. 
 
-The iterative prcoess begins with a naive estiate of `mu` and `t2`,
-and iteravely rew-calculates one pareter and then the other to approach an MVU
-estimate of each assymtotically. Details of each calculation can be found here
-(TODO: make 'here' a link to the PDF the details...).
+The iterative process begins with a naive estimate of `mu` and `t2`,
+and iteratively re-calculates one parameter and then the other to approach an MVU
+estimate of each asymptotically. Details on these calculations can be found in
+here: `vignette('peb-iterative-method')`.
 
 Note that in the case of equal numbers of observations from each individual in
 the prior population, the second and subsequent iterations of the estimation
 process do not change the parameter estimates. Hence, in the first example,
-`PEBparams(...,iterations=10)` could have been specifided with no effect on the
+`PEBparams(...,iterations=10)` could have been specified with no effect on the
 estimates.
 
 # Application of the PEB algorithm
@@ -194,7 +187,7 @@ prior observations (`ybar`).
 To continue the previous example, 
 
 ```{r}
-# number of random markers levels to generate for our ficticous person 
+# number of random markers levels to generate for our fictitious person 
 y_k <- 6
 
 # randomly generate a 'true' personal mean 
@@ -203,19 +196,18 @@ y_mean <- rnorm(1)*sqrt(beta)
 # residuals around her 'true' personal mean 
 y_resid <- rnorm(y_k)*sqrt(1-beta)
 
-# a vector of random marker levels for an individual from our ficticious
+# a vector of random marker levels for an individual from our fictitious
 # population
 y <- y_mean + y_resid
 
 # divide the vector into prior and current marker levels
 (y_current <- y[y_k])
 (y_past <- y[-y_k])
-
 ```
 
 Now, in order to evaluate whether or not the `y_current` is unexpectedly high,
-with specficity 95%, a threshold can be calculated using `threshold = qpeb(...)`, 
-and the current biomarker value (`y_current`) is condered to be elvated, if 
+with specificity 95%, a threshold can be calculated using `threshold = qpeb(...)`, 
+and the current biomarker value (`y_current`) is considered to be elevated, if 
 `y_current > threshold`, as follows:
 
 ```{r}
@@ -229,13 +221,12 @@ threshold <- qpeb(p=0.95,# set threshold with 95% specificity
 qpeb(p=0.95, n=5, ybar=.2, mu=0, sigma2=.5, tau2=.5)
 
 (currentIsElevated <- (y_current > threshold))
-
 ```
 
 If the variable `currentIsElevated` is `TRUE`, then  y_current is considered
 'elevated' with 95% specificity by the PEB.
 
-Note that inistead of passing each parameter explicitly, the `params` object
+Note that instead of passing each parameter explicitly, the `params` object
 returned by `PEBparams()` can be passed instead, as in:
 
 
@@ -244,13 +235,12 @@ threshold <- qpeb(p=0.95,# set threshold with 95% specificity
 			n=length(y_past),
 			ybar=mean(y_past),
 			params)
-
 ```
 
-An alternative to calculating the a threshold and deteriming if the current
-biomarker value exceeds taht threshold is to calculate the probability of the current
+An alternative to calculating a threshold and determining if the current
+biomarker value exceeds that value is to calculate the probability of the current
 value conditional on her history and the distribution of the biomarker in the
-prior population by using `ppeb(...)` and testing wether the probability exceeds the
+prior population by using `ppeb(...)` and testing whether the probability exceeds the
 specificity level, as in:
 
 ```{r}
@@ -261,11 +251,10 @@ prob <- ppeb(y_current,
 
 specificity <- 0.95
 (currentIsElevated <- (prob > specificity))
-
 ```
 
 In the above calls to `qpeb()` and `ppeb()`, the number and average of the
-previous biomarker level from the same individual were calculated explicity and
+previous biomarker level from the same individual were calculated explicitly and
 passed to `ppeb()` as parameters.  However, if the parameters `n` and `ybar` are
 not provided, `qpeb()` and `ppeb()` will calculate `n` and `ybar` for each value
 in y using the assumption that y is a vector containing a series of marker
@@ -274,34 +263,33 @@ results from a **single** individual, as in:
 ```{r}
 probs <- ppeb(y,params)
 (currentIsElevated <- (probs[y_k] > 0.95))
-
 ```
 
 # Sample Size requirements
 
 In practice, reasons for setting thresholds at a given specificity include (1) that
-insufficiently elevated marker levels are not indicitive of a given outcome
-(disease), and (2) that a positive test may require follow up exaiminations or
+insufficiently elevated marker levels are not indicative of a given outcome
+(disease), and (2) that a positive test may require follow up examinations or
 procedures which are costly or involve risks that an individual who is not at
 sufficient risk want to avoid.  For these reasons, it is necessary to ensure
 that the range of False Positive Rates (FPRs) that are likely to result from the
 application of the PEB algorithm is reasonably narrow.
 
-Devaitions from the expected FPR [ = 1 - specificity] may result from random
-variation in the estimates of the parmeters `mu`, `s2`, and `mu`, as well as
+Deviations from the expected FPR [ = 1 - specificity] may result from random
+variation in the estimates of the parameters `mu`, `s2`, and `mu`, as well as
 from failure of the biomarker to follow a normal distributed within-individuals,
-between-individuals, or both.  In practice it is often nessecary to apply a
+between-individuals, or both.  In practice it is often necessary to apply a
 transformation (such as the log-transformation) to the biomarker prior to
-applying the PEB algorothm.  Howeve, failure of the biomarker to meet
-assumtptions on it's distribution is beyond the topic of this discussion.
+applying the PEB algorithm.  However, failure of the biomarker to meet
+assumptions on it's distribution is beyond the topic of this discussion.
 
 Because the effective sample sizes used to estimate the `t2` and `s2` parameters
-are smaller than that of the `mu` parameter, errors in `t2` and `s2` are likeley
+are smaller than that of the `mu` parameter, errors in `t2` and `s2` are likely
 to make greater contributions to deviations from the expected FPR.  (See the PDF
 for discussion on the effective sample sizes of each parameter estimate.)
 Fortunately, the function `qpeb` can provide confidence intervals around the
 expected FPR.  **Note that the confidence intervals provided by `qpeb` account
-only for random deviations in the estiamtes of the parameters `t2` and `s2` and
+only for random deviations in the estimates of the parameters `t2` and `s2` and
 not for the deviations in the estimate of `mu`.*.
 
 
@@ -311,7 +299,6 @@ qpeb(p = 0.95,
 	n=seq(0,y_k-1),
 	ybar=c(0,cumsum(y)/seq(y_k))[-y_k + 1],
 	conf.level=0.9)
-
 ```
 
 Note that the confidence intervals on the FPR depend on (1) the size and
@@ -324,27 +311,25 @@ can be inspected without the need for a set of observations to evaluate, as in:
 
 ```{r}
 PEB.conf.int(p=0.95, n=5, conf.level=0.9, params=params)
-
 ```
 
 Finally, note that depending on the ICC and the structure of the prior population,
-the conficence intervals may go from narrow to wide, or vice versa with
+the confidence intervals may go from narrow to wide, or vice versa with
 increasing numbers of prior observations in the individual's history, because
-the total variation and within person variation estiamtes are statistically
+the total variation and within person variation estimates are statistically
 independent.  Hence, it is necessary to produce confidence intervals for a range
 of prior observations in order to assess the sufficiency of a particular prior
-when calculationg parameters for the PEB algorithm. 
+when calculating parameters for the PEB algorithm. 
 
 # Comparison of the 'iterative' and 'ICC1' methods
 
 The parameters `s2` and `t2` are related to the Interclass Correlation
-Coeffiect (beta) by the equation \deqn{beta = t2/(s2 + t2)}, which can be estimated
+Coefficient (beta) by the equation \deqn{beta = t2/(s2 + t2)}, which can be estimated
 using Analysis of Variance methods via
 
 ```{r}
 library(multilevel)
 beta <- multilevel::ICC1(aov(x~id))
-
 ```
 
 And with the estimate of `beta` the PEB parameters `s2` and `t2` can be
@@ -355,7 +340,6 @@ V  <-  var(x)
 s2 <- (1-beta) * V
 t2 <- beta * V
 mu <- mean(x)
-
 ```
 
 However, the above estimate of the total variance (`V = var(x)`) becomes biased as beta
@@ -367,25 +351,25 @@ in the prior population are not equal the estimate of `mu` is sub-optimal.
 
 Although estimates of the within group (`s2`) and total variance (V = s2 + t2)
 parameters tend to be less biased under the iterative method, the expected
-differences between estimates `s2` adn `t2` are dwarfed by their standarad
-devation (Tables 1 and 2, below).  Furthermore, the standard deviations of each
-paramerer is similar under both methods, which suggests that neither method is
+differences between estimates `s2` adn `t2` are dwarfed by their standard
+deviation (Tables 1 and 2, below).  Furthermore, the standard deviations of each
+parameter is similar under both methods, which suggests that neither method is
 substantially superior to the other in terms of accuracy of the PEB thresholds.
 The remaining advantage of the iterative method (in this implementation) is that
 the range of FPRs that can be expected when using PEB algorithm with a
 particular set of parameters can calculated along side the thresholds (via
 `qpeb(...,confl.evel=0.95)`), or on their own (via `PEB.conf.int()`).
 
-The tables below compare the differneces (1) differences betwen the mean
-parameter estimate and it true value and (2) the standard devation of each
+The tables below compare the differences (1) differences between the mean
+parameter estimate and it true value and (2) the standard deviation of each
 parameter using the ICC and iterative method, with 1,2, or 10 iterations with
 the iterative method. These following tables are the result of the simulation
 study below in which 10,000 prior populations were generated with 20 individuals 
-each of whome contribures 2,3, or 4 samples with equal probabilities, with
-serveral values of the ICC (beta) parameters.
+each of whom contributes 2,3, or 4 samples with equal probabilities, with
+several values of the ICC (beta) parameters.
 
 Notice that estimates for `s2` and `V` are virtually unchanged with after the
-second iteration (Tables 2 and 3), and because estiamtes of `s2` are unchanged
+second iteration (Tables 2 and 3), and because estimates of `s2` are unchanged
 by the iterative process, only one estimate is presented for `s2` (Table 1).
 
 ---------------------------------------------------------------------------------------
@@ -484,7 +468,7 @@ for(i in seq(n1)){
 		cat('completed',i*n2,'iterations\n')
 }
 
-# Convenience functions for calculationg the SD and bias 
+# Convenience functions for calculating the SD and bias 
 SD <- function(x,exp)
 	sqrt(sum((x - exp)^2)/length(x))
 bias <- function(x,exp){
@@ -526,7 +510,7 @@ for(i in 1:length(beta)){
 					Iter10= SD(out_Iter10[,3*(i-1)+3],exp=0)))
 }
 
-# dimnames of the output tables. 
+# set dim names of the output tables. 
 DNs2  <-  list(c('ICC1', 'iterative'),
 					 paste('beta =',beta))
 DN  <-  list(c('ICC1', '1 iteration', '2 iterations', '10 iterations'),
@@ -541,7 +525,6 @@ table2 <- matrix(paste(format(V_bias ,digits=2),
 table3 <- matrix(paste(format(mu_bias,digits=2),
 								  ' (',format(mu_sd,digits=2),')',
 								  sep=""),4,4,dimnames=DN)
-
 ```
 
 
