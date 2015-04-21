@@ -14,4 +14,4 @@
 # RStudio files
 .Rproj.user/
 
-inst/doc
+# inst/doc

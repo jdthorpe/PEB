@@ -1,0 +1,152 @@
+---
+title: "PEB Quick Start Guide"
+author: "Jason Thorpe [ jdthorpe_at_gmail_dot_com ]"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    self_contained: no
+vignette: >
+  %\VignetteIndexEntry{PEB Quick Start Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Calculating Required Parameters 
+
+When using the Parametric Empirical Bayes (PEB) algorithm to set
+personalized thresholds for a biomarker, it is necessary estimate the
+population average ($\mu$,`mu`) for the biomarker as well as the within- and
+between-person variation of that marker (sigma squared [$\sigma^2$,`s2`] and
+tau squared[$\tau^2$,`t2`], respectively).  A dataset with observed marker
+levels from a population of unaffected individuals is required, with multiple
+observations for at least some observations.
+
+The function `PEBparams()` calculates *intital* estimates for `mu`, `s2`,
+and `t2`, as follows:
+
+
+```{r,echo=FALSE}
+#-- obs <- pmax(rpois(20,lambda=2.5),1)
+#-- within <- rnorm(sum(obs)) 
+#-- between <- rep(rnorm(20),obs)
+#-- person = c(1,1,2,3,3,3,4,4,4,5)
+#-- myData <- data.frame(person = factor(rep(letters[1:20],obs)),
+#-- 					markerLevels = round(100 + within *3+ between*7,1))
+#-- dput(myData)
+
+myData <- structure(list(person = structure(c(1L, 1L, 2L, 2L, 2L, 3L, 3L, 
+3L, 3L, 4L, 4L, 5L, 5L, 5L, 6L, 6L, 6L, 7L, 7L, 7L, 7L, 8L, 8L, 
+8L, 8L, 8L, 8L, 9L, 9L, 10L, 11L, 11L, 12L, 12L, 13L, 13L, 13L, 
+13L, 13L, 13L, 14L, 14L, 15L, 15L, 16L, 16L, 17L, 17L, 18L, 18L, 
+18L, 18L, 19L, 19L, 20L, 20L, 20L), .Label = c("a", "b", "c", 
+"d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", 
+"q", "r", "s", "t"), class = "factor"), markerLevels = c(104.6, 
+98.8, 109.7, 107.7, 112.9, 102.7, 106.7, 110.4, 105.4, 93.8, 
+91.3, 100.2, 105, 102, 100.5, 101.7, 103.6, 101.9, 102.3, 104.5, 
+108.4, 100.6, 102.8, 97, 103.1, 100.1, 101.5, 102.6, 103.6, 104.2, 
+99.4, 100.2, 101.2, 99, 104.8, 100.5, 104.9, 103.9, 102.4, 103.9, 
+88, 87.8, 99.5, 91.7, 108.5, 103.1, 100.9, 104.3, 100.5, 95.5, 
+96.4, 94.9, 99.2, 99.6, 93.9, 93.4, 94.8)), .Names = c("person", 
+"markerLevels"), row.names = c(NA, -57L), class = "data.frame")
+```
+
+```{r}
+library('PEB')
+head(myData,10)
+params <- PEBparams(x=myData$markerLevels,
+					id=myData$person)
+params
+```
+
+## Calculating a personalized threshold
+
+In order to evaluate whether or not an individual's current marker levels
+(`y_current`) is unexpectedly high, with fixed specificity given her personal
+history ('y_past') and her membership in the population, a threshold can be
+calculated using `threshold = qpeb(...)`, as follows:
+
+```{r}
+# let's use person 'a' as an example.  Her prior values are:
+(y_past = myData$markerLevels [myData$person == 'a'])
+
+# and a personalized threshold with 95% specificity can be set via:
+qpeb(p=0.95,# specificity level
+	 n=length(y_past),
+	 ybar=mean(y_past),
+	 mu=params$mu,
+	 sigma2=params$s2,
+	 tau2=params$t2)
+
+# or simply:
+qpeb(p=0.95,# specificity level
+	 n=length(y_past),
+	 ybar=mean(y_past),
+	 params)
+```
+
+Hence, if her next marker level (`y_current`) exceeds 106.38, we can say that her marker is 
+elevated with 95% specificity.
+
+## Determining a personalized significance level
+
+An alternative to calculating a threshold is to calculate the quantile
+of the current value conditional on her history and the distribution of the
+biomarker in the population using `ppeb(...)`, as follows:
+
+```{r}
+y_current <- 105.8
+ppeb(y_current,
+	 n=length(y_past),
+	 ybar=mean(y_past),
+	 params)
+```
+
+In the above calls to `qpeb()` and `ppeb()`, the number and average of the
+previous biomarker level from the same individual were calculated explicitly
+and passed to `ppeb()` as parameters.  However, if the parameters `n` and
+`ybar` are not provided, `qpeb()` and `ppeb()` will calculate `n` and `ybar`
+for each value in y using the assumption that y is a vector containing a
+series of marker results from a **single** individual, as in:
+
+```{r}
+y <- c(y_past,
+	   y_current)
+ppeb(y,params)
+```
+
+## Accuracy of Specificity Levels
+
+Because the accuracy the specificity for each threshold depends on the
+sample sizes used to calculate the PEB parameters, it is useful to estimate
+the accuracy of the specificity of PEB thresholds.  This can be accomplished by using the
+'iterative' method to calculate the PEB parameters, and specifying the
+`conf.level` parameter of `qpeb()`
+
+```{r}
+# calculate the parameters using the Iterative method
+params_iterative <- 
+	PEBparams(x=myData$markerLevels,
+			  id=myData$person,
+			  method='iterative')
+
+qpeb(p = 0.95,
+	params_iterative,
+	n=length(y_past),
+	ybar=mean(y_past),
+	conf.level=0.9)
+```
+
+Notice that the threshold has changed slightly (106.44, up from 106.38)
+with the 'iterative' method, and that the confidence interval for the false
+positive rate is fairly wide (`[90.7%,98.6%]`), indicating that our initial
+dataset with 57 observations from 20 individuals may be too small to
+estimate thresholds with sufficient precision for many applications.
+
+For a complete discussion on the PEB parameters, see `vignette('peb-parameters')`
+
+
+
