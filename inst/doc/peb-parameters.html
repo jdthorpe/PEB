@@ -90,30 +90,30 @@ mu =<span class="st"> </span><span class="kw">mean</span>(x)
 s2 =<span class="st"> </span><span class="kw">mean</span>(<span class="kw">tapply</span>(x,id,var))
 t2 =<span class="st"> </span><span class="kw">var</span>(<span class="kw">tapply</span>(x,id,mean))-<span class="st"> </span>(s2/k)
 <span class="kw">c</span>(mu,s2,t2)
-<span class="co">#&gt; [1] 0.04088355 0.49867392 0.84845032</span></code></pre>
+<span class="co">#&gt; [1] -0.2281001  0.3114878  0.7071553</span></code></pre>
 <p>The function <code>PEBparams()</code> calculates <em>initital</em> estimates for <code>mu</code>, <code>s2</code>, and <code>t2</code> in exactly this way when the <code>'iterative'</code> is specified.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">'PEB'</span>)
 params &lt;-<span class="st"> </span><span class="kw">PEBparams</span>(x,id,<span class="dt">method=</span><span class="st">'iterative'</span>,<span class="dt">iterations=</span><span class="dv">1</span>)
 params
-<span class="co">#&gt; mu: 0.04088 [ -0.3173 , 0.399 ]</span>
-<span class="co">#&gt; sigma^2: 0.4987 [ 0.6351 , 0.3764 ]</span>
-<span class="co">#&gt; tau^2: 0.8485 [ 1.377 , 0.4326 ]</span>
+<span class="co">#&gt; mu: -0.2281 [ -0.5507 , 0.09453 ]</span>
+<span class="co">#&gt; sigma^2: 0.3115 [ 0.3967 , 0.2351 ]</span>
+<span class="co">#&gt; tau^2: 0.7072 [ 1.141 , 0.3645 ]</span>
 <span class="co">#&gt; Calculated using 100 observations, from  20 inidividuals.</span>
 <span class="co">#&gt; ([x,y] indicates the 90% confidence interval for each parameter)</span>
 
 <span class="co"># The individual parameters can be extracted via:</span>
 <span class="kw">c</span>(params$mu,params$s2,params$t2)
-<span class="co">#&gt; [1] 0.04088355 0.49867392 0.84845032</span></code></pre>
+<span class="co">#&gt; [1] -0.2281001  0.3114878  0.7071553</span></code></pre>
 <p>Note that in addition to each of the required parameters , <code>PEBparams(...,method='iterative')</code> also estimates the error variances for each parameter which are used calculate confidence intervals. The error variances can be viewed via:</p>
 <pre class="sourceCode r"><code class="sourceCode r">params[<span class="kw">c</span>(<span class="st">'mu.ev'</span>,<span class="st">'t2.ev'</span>,<span class="st">'s2.ev'</span>)]
 <span class="co">#&gt; $mu.ev</span>
-<span class="co">#&gt; [1] 0.04740926</span>
+<span class="co">#&gt; [1] 0.03847264</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $t2.ev</span>
-<span class="co">#&gt; [1] 0.09488604</span>
+<span class="co">#&gt; [1] 0.06241888</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; $s2.ev</span>
-<span class="co">#&gt; [1] 0.006216892</span></code></pre>
+<span class="co">#&gt; [1] 0.002425616</span></code></pre>
 </div>
 <div id="parameter-estimates-with-unequal-ks" class="section level2">
 <h2>Parameter estimates with unequal k’s</h2>
@@ -152,11 +152,11 @@ w   &lt;-<span class="st"> </span>(k -<span class="st"> </span><span class="dv">
 
 <span class="co"># an MVU estimate of s2</span>
 (s2 &lt;-<span class="st"> </span><span class="kw">sum</span>(w*s2_i) /<span class="st"> </span><span class="kw">sum</span>(w))
-<span class="co">#&gt; [1] 0.3503374</span></code></pre>
+<span class="co">#&gt; [1] 0.3669109</span></code></pre>
 <p>The above estimate of <code>s2</code> is indeed the estimate for <code>s2</code> returned by <code>PEBparams(...,method='iterative')</code>.</p>
 <pre class="sourceCode r"><code class="sourceCode r">params &lt;-<span class="st"> </span><span class="kw">PEBparams</span>(x,id,<span class="dt">method=</span><span class="st">'iterative'</span>)
 params$s2
-<span class="co">#&gt; [1] 0.3503374</span></code></pre>
+<span class="co">#&gt; [1] 0.3669109</span></code></pre>
 <p>Unfortunately, closed form MVU estimates of <code>mu</code> and <code>s2</code> are not available. The <code>mu</code> parameter is most accurately thought of as the average of the personal averages. With unequal numbers of prior observations, an MVU estimate of <code>mu</code> will be a weighted average of the set of personal means {<code>mu_i</code>} calculated as follows:</p>
 <pre class="sourceCode r"><code class="sourceCode r">mu_i &lt;-<span class="st"> </span><span class="kw">tapply</span>(x,id,mean)</code></pre>
 <p>The relative weights applied to each element of <code>mu_i</code> would depend on the numbers of prior observations per person as well as relative magnitudes of <code>t2</code> and <code>s2</code>. Hence an MVU estimate of <code>mu</code> would rely on an MVU estimate of <code>t2</code>. On the other hand, the estimate of <code>t2</code> depends on an estimate of <code>mu</code> around which the sum of the squares is calculated.</p>
@@ -183,9 +183,9 @@ y &lt;-<span class="st"> </span>y_mean +<span class="st"> </span>y_resid
 
 <span class="co"># divide the vector into prior and current marker levels</span>
 (y_current &lt;-<span class="st"> </span>y[y_k])
-<span class="co">#&gt; [1] 0.2130402</span>
+<span class="co">#&gt; [1] 2.799904</span>
 (y_past &lt;-<span class="st"> </span>y[-y_k])
-<span class="co">#&gt; [1] 1.5367301 1.8015176 0.5134604 0.6799848 0.1585988</span></code></pre>
+<span class="co">#&gt; [1] -0.3205941  0.1139195  1.3123851  0.7562528  1.3265883</span></code></pre>
 <p>Now, in order to evaluate whether or not the <code>y_current</code> is unexpectedly high, with specificity 95%, a threshold can be calculated using <code>threshold = qpeb(...)</code>, and the current biomarker value (<code>y_current</code>) is considered to be elevated, if <code>y_current &gt; threshold</code>, as follows:</p>
 <pre class="sourceCode r"><code class="sourceCode r">threshold &lt;-<span class="st"> </span><span class="kw">qpeb</span>(<span class="dt">p=</span><span class="fl">0.95</span>,<span class="co"># set threshold with 95% specificity</span>
             <span class="dt">n=</span><span class="kw">length</span>(y_past),
@@ -198,7 +198,7 @@ y &lt;-<span class="st"> </span>y_mean +<span class="st"> </span>y_resid
 <span class="co">#&gt; [1] 1.422944</span>
 
 (currentIsElevated &lt;-<span class="st"> </span>(y_current &gt;<span class="st"> </span>threshold))
-<span class="co">#&gt; [1] FALSE</span></code></pre>
+<span class="co">#&gt; [1] TRUE</span></code></pre>
 <p>If the variable <code>currentIsElevated</code> is <code>TRUE</code>, then y_current is considered ‘elevated’ with 95% specificity by the PEB.</p>
 <p>Note that instead of passing each parameter explicitly, the <code>params</code> object returned by <code>PEBparams()</code> can be passed instead, as in:</p>
 <pre class="sourceCode r"><code class="sourceCode r">threshold &lt;-<span class="st"> </span><span class="kw">qpeb</span>(<span class="dt">p=</span><span class="fl">0.95</span>,<span class="co"># set threshold with 95% specificity</span>
@@ -213,11 +213,11 @@ y &lt;-<span class="st"> </span>y_mean +<span class="st"> </span>y_resid
 
 specificity &lt;-<span class="st"> </span><span class="fl">0.95</span>
 (currentIsElevated &lt;-<span class="st"> </span>(prob &gt;<span class="st"> </span>specificity))
-<span class="co">#&gt; [1] FALSE</span></code></pre>
+<span class="co">#&gt; [1] TRUE</span></code></pre>
 <p>In the above calls to <code>qpeb()</code> and <code>ppeb()</code>, the number and average of the previous biomarker level from the same individual were calculated explicitly and passed to <code>ppeb()</code> as parameters. However, if the parameters <code>n</code> and <code>ybar</code> are not provided, <code>qpeb()</code> and <code>ppeb()</code> will calculate <code>n</code> and <code>ybar</code> for each value in y using the assumption that y is a vector containing a series of marker results from a <strong>single</strong> individual, as in:</p>
 <pre class="sourceCode r"><code class="sourceCode r">probs &lt;-<span class="st"> </span><span class="kw">ppeb</span>(y,params)
 (currentIsElevated &lt;-<span class="st"> </span>(probs[y_k] &gt;<span class="st"> </span><span class="fl">0.95</span>))
-<span class="co">#&gt; [1] FALSE</span></code></pre>
+<span class="co">#&gt; [1] TRUE</span></code></pre>
 </div>
 <div id="sample-size-requirements" class="section level1">
 <h1>Sample Size requirements</h1>
@@ -230,21 +230,21 @@ specificity &lt;-<span class="st"> </span><span class="fl">0.95</span>
     <span class="dt">ybar=</span><span class="kw">c</span>(<span class="dv">0</span>,<span class="kw">cumsum</span>(y)/<span class="kw">seq</span>(y_k))[-y_k +<span class="st"> </span><span class="dv">1</span>],
     <span class="dt">conf.level=</span><span class="fl">0.9</span>)
 <span class="co">#&gt;      quantile p.lower.CI p.upper.CI</span>
-<span class="co">#&gt; [1,] 1.883301  0.9170615  0.9833553</span>
-<span class="co">#&gt; [2,] 2.338174  0.9243910  0.9769204</span>
-<span class="co">#&gt; [3,] 2.519474  0.9252517  0.9755134</span>
-<span class="co">#&gt; [4,] 2.229333  0.9249069  0.9751958</span>
-<span class="co">#&gt; [5,] 1.931069  0.9243830  0.9751907</span>
-<span class="co">#&gt; [6,] 1.818896  0.9238898  0.9752820</span></code></pre>
+<span class="co">#&gt; [1,] 1.390761  0.9163273  0.9800454</span>
+<span class="co">#&gt; [2,] 1.002247  0.9231922  0.9752873</span>
+<span class="co">#&gt; [3,] 1.048767  0.9245018  0.9742341</span>
+<span class="co">#&gt; [4,] 1.390896  0.9245442  0.9740387</span>
+<span class="co">#&gt; [5,] 1.615162  0.9242912  0.9740917</span>
+<span class="co">#&gt; [6,] 1.934703  0.9239876  0.9742216</span></code></pre>
 <p>Note that the confidence intervals on the FPR depend on (1) the size and structure of the prior population, (2) the ICC, and (3) number of observations in the individual’s history. Notably, the confidence intervals do not depend on the individual’s personal average, and in the case of determining if a particular parameter set is sufficient, the confidence intervals produced by <code>PEB.conf.int</code> can be inspected without the need for a set of observations to evaluate, as in:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">PEB.conf.int</span>(<span class="dt">p=</span><span class="fl">0.95</span>, <span class="dt">n=</span><span class="dv">5</span>, <span class="dt">conf.level=</span><span class="fl">0.9</span>, <span class="dt">params=</span>params)
 <span class="co">#&gt;      n p.lower.CI p.upper.CI</span>
-<span class="co">#&gt; [1,] 0  0.9170615  0.9833553</span>
-<span class="co">#&gt; [2,] 1  0.9243910  0.9769204</span>
-<span class="co">#&gt; [3,] 2  0.9252517  0.9755134</span>
-<span class="co">#&gt; [4,] 3  0.9249069  0.9751958</span>
-<span class="co">#&gt; [5,] 4  0.9243830  0.9751907</span>
-<span class="co">#&gt; [6,] 5  0.9238898  0.9752820</span></code></pre>
+<span class="co">#&gt; [1,] 0  0.9163273  0.9800454</span>
+<span class="co">#&gt; [2,] 1  0.9231922  0.9752873</span>
+<span class="co">#&gt; [3,] 2  0.9245018  0.9742341</span>
+<span class="co">#&gt; [4,] 3  0.9245442  0.9740387</span>
+<span class="co">#&gt; [5,] 4  0.9242912  0.9740917</span>
+<span class="co">#&gt; [6,] 5  0.9239876  0.9742216</span></code></pre>
 <p>Finally, note that depending on the ICC and the structure of the prior population, the confidence intervals may go from narrow to wide, or vice versa with increasing numbers of prior observations in the individual’s history, because the total variation and within person variation estimates are statistically independent. Hence, it is necessary to produce confidence intervals for a range of prior observations in order to assess the sufficiency of a particular prior when calculating parameters for the PEB algorithm.</p>
 </div>
 <div id="comparison-of-the-iterative-and-icc1-methods" class="section level1">

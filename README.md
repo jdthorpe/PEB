@@ -36,5 +36,5 @@ determining sample size requirements when estimating the required parameters.
 3. Browse the vignettes:
 	- [The Quick Start Guide](http://htmlpreview.github.io/?https://github.com/jdthorpe/PEB/blob/master/inst/doc/PEBquickStartGuide.html): `vignette("PEBquickStartGuide")`
 	- [A Practical Guide to the PEB](http://htmlpreview.github.io/?https://github.com/jdthorpe/PEB/blob/master/inst/doc/peb-parameters.html): `vignette("peb-parameters")`
-	- [Theory Behind the Iterative Method for PEB Parameter Esatimation](http://htmlpreview.github.io/?https://github.com/jdthorpe/PEB/blob/master/inst/doc/peb-iterative-method.pdf): `vignette("peb-iterative-method")`
+	- [Theory Behind the Iterative Method for PEB Parameter Esatimation](https://github.com/jdthorpe/PEB/blob/master/inst/doc/peb-iterative-method.pdf): `vignette("peb-iterative-method")`
 

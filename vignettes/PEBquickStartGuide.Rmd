@@ -3,8 +3,7 @@ title: "PEB Quick Start Guide"
 author: "Jason Thorpe [ jdthorpe_at_gmail_dot_com ]"
 date: "`r Sys.Date()`"
 output:
-  rmarkdown::html_vignette:
-    self_contained: no
+  html_document
 vignette: >
   %\VignetteIndexEntry{PEB Quick Start Guide}
   %\VignetteEngine{knitr::rmarkdown}
