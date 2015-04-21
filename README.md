@@ -27,14 +27,14 @@ determining sample size requirements when estimating the required parameters.
     * Alternatively, downoload the github repository to a zip file and use:
 
         ```R
-        install.packages("mfactor.zip", repos = NULL)
+        install.packages("PEB.zip", repos = NULL)
 
         # Remove the package after installation
-        unlink("mfactor.zip")
+        unlink("PEB.zip")
         ```
 
 3. Browse the vignettes:
 	- [The Quick Start Guide](http://htmlpreview.github.io/?https://github.com/jdthorpe/PEB/blob/master/inst/doc/PEBquickStartGuide.html): `vignette("PEBquickStartGuide")`
-	- [A Practical Guide to the PEB](http://htmlpreview.github.io/?https://github.com/jdthorpe/mfactor/blob/master/inst/doc/An-Introduction-to-Mfactors.html): `vignette("peb-parameters")`
-	- [Theory Behind the Iterative Method for PEB Parameter Esatimation](http://htmlpreview.github.io/?https://github.com/jdthorpe/mfactor/blob/master/inst/doc/An-Introduction-to-Mfactors.pdf): `vignette("peb-iterative-method")`
+	- [A Practical Guide to the PEB](http://htmlpreview.github.io/?https://github.com/jdthorpe/PEB/blob/master/inst/doc/peb-parameters.html): `vignette("peb-parameters")`
+	- [Theory Behind the Iterative Method for PEB Parameter Esatimation](http://htmlpreview.github.io/?https://github.com/jdthorpe/PEB/blob/master/inst/doc/peb-iterative-method.pdf): `vignette("peb-iterative-method")`
 
