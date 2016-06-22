@@ -59,6 +59,7 @@ PEBparams <- function(x,
 	if(method == 'ICC1' && !missing(iterations))
 		stop("parameter 'iterations' is not used when method == 'ICC1'")
 
+	stopifnot(all(is.finite(x)))
 	if(!inherits(id,'factor'))
 		stop("parameter 'id' must be a factor")
 	if(!  all(levels(id) %in% id)){
@@ -73,8 +74,11 @@ PEBparams <- function(x,
 	m <- length(levels(id))
 
 	if(method == 'ICC1'){
-
-		AOV = aov(x~id)
+		tryCatch({
+			AOV = aov(formula(x~id))
+		},error=function(err){
+			stop('Internal call to `aov()` failed with error message: "%s".  \n\nSuggest using: PEBparams( ... , method="iterative")')
+		})
 		(B1 = multilevel::ICC1(AOV))
 		V  <-  var(x)
 		out  <-  list(s2 = (1-B1) * V,
@@ -99,6 +103,9 @@ PEBparams <- function(x,
 		# estiamte sigma^2
 		#############################################
 		s2i 	<- tapply(x,id,var)
+#-- 		if(!all(is.na(s2i) == (nresults == 1)))
+#-- 			browser()
+
 		stopifnot(is.na(s2i) == (nresults == 1))
 
 		#relative error variances of 
